@@ -14,7 +14,7 @@ import os
 site = 'https://www.codewars.com/users/sign_in'
 path = r'YOUR PATH'
 email = 'YOUR EMAIL'
-password = 'YOUR PASSWORDS'
+password = 'YOUR PASSWORD'
 def scrapping(site, path, email, password):
     filtro = {' ':'_', '?':'', '!':'', '.':'', '-':'', ':':'', ';':'', ',':'', "'":'', '<':'', '>':'', '=':'', '+':''}
     ##add the desired language and it extension like bellow
@@ -37,12 +37,14 @@ def scrapping(site, path, email, password):
     browser.get(href + '/completed_solutions')
     time.sleep(pause)
     check = check_exists_by_class("p-10px.js-infinite-marker",  browser)
+    
     ##rolling the page down to the end
     while check == True:
         html = browser.find_element_by_tag_name('html')
         html.send_keys(Keys.END)
         time.sleep(pause)
         check = check_exists_by_class("p-10px.js-infinite-marker", browser)
+    
     time.sleep(pause)
     elements = browser.find_elements_by_class_name("item-title")
     elements1 = browser.find_elements_by_class_name("list-item.solutions")
@@ -52,10 +54,12 @@ def scrapping(site, path, email, password):
     kata_codes = []
     kata_descriptions = []
     kata_kyu = []
+    
     for element in elements:
         kata_links.append(element.find_element_by_css_selector('a').get_attribute('href'))
         kata_titles.append(element.find_element_by_css_selector('a').text)
         kata_kyu.append(element.find_element_by_css_selector('span').text)
+    
     for element in elements1:
         if isinstance(element.find_elements_by_css_selector('h6'), list) == True and len(element.find_elements_by_css_selector('h6')) > 1:
             multiples_languages = []
@@ -70,14 +74,19 @@ def scrapping(site, path, email, password):
         else:
             kata_languages.append(element.find_element_by_css_selector('h6').text)
             kata_codes.append(element.find_element_by_css_selector('code').text)
-    for link in kata_links:
-        browser.get(link)
+    
+    for i in range(len(kata_links)):
+        browser.get(kata_links[i])
+        for simbols in filtro:
+            kata_titles[i] = kata_titles[i].replace(simbols, filtro[simbols])
         time.sleep(2)
+        if os.path.exists(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i]) == True:
+            break
+        print(kata_titles[i])
         kata_descriptions.append(browser.find_element_by_id('description').text)
-    for i in range(len(kata_kyu)):
+    
+    for i in range(len(kata_descriptions)):
         if isinstance(kata_languages[i], list) == True:
-            for simbols in filtro:
-                kata_titles[i] = kata_titles[i].replace(simbols, filtro[simbols])
             for j in range(len(kata_languages[i])):
                 for language in languages:
                     kata_languages[i][j] = kata_languages[i][j].replace(language, languages[language])
@@ -90,8 +99,6 @@ def scrapping(site, path, email, password):
                 with open(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i] + "\\" + 'README.md', 'wt', encoding = 'utf8') as file:
                     file.write(kata_descriptions[i])
         else:        
-            for simbols in filtro:
-                kata_titles[i] = kata_titles[i].replace(simbols, filtro[simbols])
             for language in languages:
                 kata_languages[i] = kata_languages[i].replace(language, languages[language])
             if os.path.exists(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i]) == True:
@@ -102,15 +109,16 @@ def scrapping(site, path, email, password):
                 file.write(kata_codes[i])
             with open(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i] + "\\" + 'README.md', 'wt', encoding = 'utf8') as file:
                 file.write(kata_descriptions[i])
+    
     a = input('All files created :)\nPress return to quit.')
     browser.quit()
+
 def check_exists_by_class(clas, browser):
     try:
         browser.find_element_by_class_name(clas)
     except NoSuchElementException:
         return False
     return True
-
 
 def create_dir(path):
     for i in range(1,9):
