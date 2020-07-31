@@ -18,7 +18,7 @@ password = 'YOUR PASSWORD'
 def scrapping(site, path, email, password):
     filtro = {' ':'_', '?':'', '!':'', '.':'', '-':'', ':':'', ';':'', ',':'', "'":'', '<':'', '>':'', '=':'', '+':''}
     ##add the desired language and it extension like bellow
-    languages = {'Python:':'.py', 'JavaScript:':'.js', 'C:':'.c'} ##if there are languages in 
+    languages = {'Python:':'.py', 'JavaScript:':'.js', 'C:':'.c', 'PHP:':'.php'} ##if there are languages in 
                     ##your completed kata that are not here, some errors may happen.
     pause = 5
     browser = webdriver.Chrome()
@@ -74,15 +74,20 @@ def scrapping(site, path, email, password):
         else:
             kata_languages.append(element.find_element_by_css_selector('h6').text)
             kata_codes.append(element.find_element_by_css_selector('code').text)
-    
+    cont = 0
     for i in range(len(kata_links)):
         browser.get(kata_links[i])
         for simbols in filtro:
             kata_titles[i] = kata_titles[i].replace(simbols, filtro[simbols])
         time.sleep(2)
-        if os.path.exists(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i]) == True:
-            break
-        print(kata_titles[i])
+        if isinstance(kata_languages[i], list) == True:
+            if check_exist_file(kata_languages[i], kata_titles[i], kata_kyu[i], languages) == True:
+                cont += 1
+            if cont == len(kata_languages[i]):
+                break
+        else:
+            if os.path.exists(path + "\\" + kata_kyu[i] + "\\" + kata_titles[i]) == True:
+                break
         kata_descriptions.append(browser.find_element_by_id('description').text)
     
     for i in range(len(kata_descriptions)):
@@ -126,5 +131,12 @@ def create_dir(path):
             pass
         else:
             os.mkdir(path + "\\" + str(i) + " kyu")
+
+def check_exist_file(kata_language, kata_title, kata_kyu, languages):
+    for i in range(len(kata_language)):
+        for language in languages:
+            kata_language[i] = kata_language[i].replace(language, languages[language])
+        if os.path.exists(path + "\\" + kata_kyu + "\\" + kata_title + "\\" + kata_title + kata_language[i]):
+            return True
 
 scrapping(site, path, email, password)
